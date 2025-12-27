@@ -1,18 +1,14 @@
 import pandas as pd
-import ta
 
 def add_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    close = df["Close"]
-    if isinstance(close, pd.DataFrame):
-        close = close.iloc[:, 0]
+    # Simple moving averages
+    df["ma_5"] = df["Close"].rolling(window=5).mean()
+    df["ma_10"] = df["Close"].rolling(window=10).mean()
 
-    df["rsi"] = ta.momentum.RSIIndicator(close).rsi()
-    df["macd"] = ta.trend.MACD(close).macd()
-    df["sma_20"] = close.rolling(20).mean()
-    df["sma_50"] = close.rolling(50).mean()
-    df["volatility"] = close.pct_change().rolling(20).std()
+    # Momentum
+    df["return_1"] = df["Close"].pct_change(1)
+    df["return_5"] = df["Close"].pct_change(5)
 
-    df.dropna(inplace=True)
     return df
