@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import re
+from typing import Optional, List, Dict
+from api.agent import chat_agent
+from api.memory import get_memory
 
-from ml.predict import predict_stock
+app = FastAPI(title="StockBot AI", version="1.0.0")
 
-app = FastAPI(title="StockBot API")
-
+# Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,63 +17,30 @@ app.add_middleware(
 )
 
 
-class Query(BaseModel):
+class ChatRequest(BaseModel):
     message: str
+    session_id: Optional[str] = None  # For future multi-user support
 
 
-def extract_ticker(text: str):
-    """
-    Strategy:
-    - Extract ALL uppercase words (1–5 chars)
-    - Remove English words
-    - RETURN THE LAST VALID CANDIDATE (AAPL comes after WHAT)
-    """
-    blacklist = {
-        "WHAT", "SHOULD", "WITH", "ABOUT", "PRICE",
-        "STOCK", "BUY", "SELL", "HOLD", "DO", "ME",
-        "TELL", "TOP", "BEST"
-    }
-
-    candidates = re.findall(r"\b[A-Z]{1,5}\b", text.upper())
-
-    valid = [c for c in candidates if c not in blacklist]
-
-    if not valid:
-        return None
-
-    return valid[-1]   # 👈 KEY FIX
-
-
-@app.get("/")
-def root():
-    return {"status": "StockBot API running"}
+class ClearHistoryRequest(BaseModel):
+    session_id: Optional[str] = None
 
 
 @app.post("/chat")
-def chat(query: Query):
-    ticker = extract_ticker(query.message)
+def chat(req: ChatRequest):
+    """Main chat endpoint - returns LLM-powered stock analysis."""
+    return chat_agent(req.message)
 
-    if not ticker:
-        return {
-            "error": "Please mention a valid stock ticker like AAPL, TSLA, MSFT"
-        }
 
-    try:
-        result = predict_stock(ticker)
-    except Exception as e:
-        return {
-            "error": f"Prediction failed for {ticker}",
-            "details": str(e)
-        }
+@app.post("/clear-history")
+def clear_history(req: ClearHistoryRequest):
+    """Clear conversation history."""
+    memory = get_memory()
+    memory.clear_history()
+    return {"status": "success", "message": "Conversation history cleared"}
 
-    return {
-        "ticker": result["ticker"],
-        "current_price": result["current_price"],
-        "predicted_price": result["predicted_price"],
-        "expected_change_pct": result["expected_change_pct"],
-        "signal": result["signal"],
-        "explanation": (
-            f"The model predicts a {result['expected_change_pct']}% move. "
-            f"Signal: {result['signal']}."
-        ),
-    }
+
+@app.get("/health")
+def health():
+    """Health check endpoint."""
+    return {"status": "healthy", "service": "StockBot AI"}

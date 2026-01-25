@@ -1,11 +1,15 @@
-fastapi==0.110.0
-uvicorn==0.27.1
-pydantic==2.6.1
-numpy==1.26.4
-pandas==2.1.4
-scikit-learn==1.3.2
-joblib==1.3.2
-yfinance==0.2.33
-requests==2.31.0
-# Render free tier compatible
-# Render free tier compatible 
+fastapi
+uvicorn
+pydantic
+python-dotenv
+requests
+openai
+yfinance
+feedparser
+numpy
+pandas
+scikit-learn
+streamlit
+plotly
+tqdm
+textblob

@@ -1,0 +1,20 @@
+{
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    "**/.venv",
+    "**/venv"
+  ],
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Windows",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": false,
+  "reportUnusedImport": "warning",
+  "reportUnusedClass": "warning",
+  "reportUnusedFunction": "warning",
+  "reportUnusedVariable": "warning"
+}
